@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Web Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a4a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Efek cahaya blur */
+        .light-effect {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .light-blue {
+            background: #1e40af;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .light-pink {
+            background: #ec4899;
+            bottom: 10%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+        
+        .light-red {
+            background: #dc2626;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+        
+        .container {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #3b82f6, #ec4899, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        .developer {
+            font-size: 1rem;
+            margin-bottom: 30px;
+            color: #cbd5e1;
+            opacity: 0.8;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            background: rgba(30, 41, 59, 0.7);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #3b82f6, #ec4899);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .result img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .download-btn {
+            margin-top: 20px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            padding: 12px 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 20px;
+            color: #94a3b8;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .example-urls {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .example-url {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .example-url:hover {
+            background: rgba(59, 130, 246, 0.4);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="light-effect light-blue"></div>
+    <div class="light-effect light-pink"></div>
+    <div class="light-effect light-red"></div>
+    
+    <div class="container">
+        <h1>Screenshot Web Generator</h1>
+        <p class="developer">Developer Website @SAHRILMODZZ!!?</p>
+        
+        <div class="input-group">
+            <label for="url">URL WEBSITE</label>
+            <input type="text" id="url" placeholder="Masukkan URL website (contoh: https://sahrilcode-lake.vercel.app)" value="https://sahrilcode-lake.vercel.app">
+            <div class="example-urls">
+                <div class="example-url" data-url="https://google.com">Google</div>
+                <div class="example-url" data-url="https://github.com">GitHub</div>
+                <div class="example-url" data-url="https://wikipedia.org">Wikipedia</div>
+                <div class="example-url" data-url="https://youtube.com">YouTube</div>
+            </div>
+        </div>
+        
+        <button class="btn" id="generateBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21,15 16,10 5,21"></polyline>
+            </svg>
+            SS WEB
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Mengambil screenshot...</p>
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            Screenshot berhasil dihasilkan! Klik tombol di bawah untuk mendownload.
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            Terjadi kesalahan. Pastikan URL valid dan coba lagi.
+        </div>
+        
+        <div class="result" id="result">
+            <img id="screenshotImg" src="" alt="Screenshot">
+            <button class="btn download-btn" id="downloadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7,10 12,15 17,10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download di Chrome
+            </button>
+        </div>
+        
+        <div class="footer">
+            Gunakan browser Chrome untuk hasil terbaik
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', generateScreenshot);
+        
+        // Contoh URL cepat
+        document.querySelectorAll('.example-url').forEach(element => {
+            element.addEventListener('click', function() {
+                document.getElementById('url').value = this.getAttribute('data-url');
+                generateScreenshot();
+            });
+        });
+        
+        function generateScreenshot() {
+            const url = document.getElementById('url').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (!url) {
+                showError('Masukkan URL website terlebih dahulu!');
+                return;
+            }
+            
+            // Validasi URL
+            if (!isValidUrl(url)) {
+                showError('URL tidak valid! Pastikan URL dimulai dengan http:// atau https://');
+                return;
+            }
+            
+            // Tampilkan loading, sembunyikan hasil dan pesan error
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<div class="spinner" style="width:20px;height:20px;margin:0"></div> Memproses...';
+            
+            // API endpoint dengan format yang benar
+            const apiUrl = `https://laurine.site/api/generator/ssweb?url=${encodeURIComponent(url)}`;
+            
+            // Kirim permintaan ke API menggunakan proxy untuk menghindari CORS
+            fetchScreenshot(apiUrl)
+                .then(imageUrl => {
+                    // Tampilkan gambar
+                    document.getElementById('screenshotImg').src = imageUrl;
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('successMessage').style.display = 'block';
+                    resetGenerateButton();
+                    
+                    // Setel event untuk tombol download
+                    document.getElementById('downloadBtn').onclick = function() {
+                        downloadImage(imageUrl, `screenshot-${new Date().getTime()}.png`);
+                    };
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    resetGenerateButton();
+                    showError('Gagal mengambil screenshot. Pastikan URL valid dan coba lagi. Error: ' + error.message);
+                });
+        }
+        
+        function fetchScreenshot(apiUrl) {
+            return new Promise((resolve, reject) => {
+                // Coba beberapa metode untuk mengatasi CORS
+                const methods = [
+                    // Metode 1: Fetch langsung
+                    () => fetch(apiUrl).then(handleResponse),
+                    // Metode 2: Menggunakan proxy CORS
+                    () => fetch(`https://corsproxy.io/?${encodeURIComponent(apiUrl)}`).then(handleResponse),
+                    // Metode 3: Menggunakan proxy alternatif
+                    () => fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(apiUrl)}`).then(handleResponse)
+                ];
+                
+                let currentMethod = 0;
+                
+                function tryNextMethod() {
+                    if (currentMethod >= methods.length) {
+                        reject(new Error('Semua metode gagal. Coba lagi nanti.'));
+                        return;
+                    }
+                    
+                    methods[currentMethod]()
+                        .then(resolve)
+                        .catch(error => {
+                            console.log(`Metode ${currentMethod + 1} gagal:`, error);
+                            currentMethod++;
+                            tryNextMethod();
+                        });
+                }
+                
+                tryNextMethod();
+            });
+        }
+        
+        function handleResponse(response) {
+            if (!response.ok) {
+                throw new Error('Gagal mengambil screenshot. Status: ' + response.status);
+            }
+            return response.blob().then(blob => {
+                // Periksa apakah blob valid (gambar)
+                if (blob.size === 0) {
+                    throw new Error('Respons API kosong');
+                }
+                
+                // Buat URL objek dari blob
+                return URL.createObjectURL(blob);
+            });
+        }
+        
+        function downloadImage(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Tampilkan pesan sukses download
+            setTimeout(() => {
+                alert('Screenshot berhasil didownload!');
+            }, 500);
+        }
+        
+        function resetGenerateButton() {
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21,15 16,10 5,21"></polyline>
+                </svg>
+                SS WEB
+            `;
+        }
+        
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // Enter key untuk trigger generate
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateScreenshot();
+            }
+        });
+        
+        // Contoh penggunaan dengan URL default
+        window.addEventListener('load', function() {
+            // Tampilkan contoh URL
+            document.getElementById('url').focus();
+        });
+    </script>
+</body>
+</html>
